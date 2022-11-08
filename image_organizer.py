@@ -1,6 +1,5 @@
 import mimetypes
 import re
-import xml.etree.ElementTree
 from calendar import month_name
 from datetime import datetime
 from os import PathLike
@@ -8,6 +7,8 @@ from pathlib import Path
 from shutil import copy2, move
 from typing import Union, Callable
 
+from PIL import Image, UnidentifiedImageError
+from PIL.ExifTags import TAGS
 from pymediainfo import MediaInfo
 
 
@@ -16,7 +17,7 @@ class ImageOrganizer:
     def __init__(self,
                  working_directory: Union[PathLike, str],
                  move_file: bool = False,
-                 fast_parse: bool = True):
+                 fast_parse: bool = False):
 
         self.working_dir = working_directory
         self.move_file = move_file
@@ -74,21 +75,24 @@ class ImageOrganizer:
                     elif self.fast_parse:
                         media_type = self._check_filetype_mime(searched_file)
 
-                    file_date_modified = self._get_modification_time(searched_file)
+                    # attempt to get exif data
+                    file_creation_date = self._get_exif(searched_file)
+                    # if unable to get exif data fallback to modification time
+                    if not file_creation_date:
+                        file_creation_date = self._get_modification_time(searched_file)
 
                     if media_type:
-                        # file_date_modified = self._get_modification_time(searched_file)
                         if media_type == "Image":
                             # get date modified and send to images
-                            self._img_sorter(searched_file, file_date_modified)
+                            self._img_sorter(searched_file, file_creation_date)
                             self.total_images += 1
                         elif media_type == "Video":
                             # get date modified and send to video
-                            self._video_sorter(searched_file, file_date_modified)
+                            self._video_sorter(searched_file, file_creation_date)
                             self.total_videos += 1
                     elif not media_type:
                         # send to unknown folder location
-                        self._unknown_sorter(searched_file, file_date_modified)
+                        self._unknown_sorter(searched_file, file_creation_date)
                         self.total_unknown += 1
 
             progress += 1
@@ -186,6 +190,32 @@ class ImageOrganizer:
         return Path(str(Path(Path(file_name).name).with_suffix("")) + str(dupe) + str(Path(file_name).suffix))
 
     @staticmethod
+    def _get_exif(file):
+        try:
+            open_image = Image.open(file).getexif()
+        except UnidentifiedImageError:
+            return None
+
+        exif_key = None
+        for exif_key, value in TAGS.items():
+            if value == "ExifOffset":
+                break
+        info = open_image.get_ifd(exif_key)
+
+        exif_dict = {TAGS.get(exif_key, exif_key): value
+                     for exif_key, value in info.items()}
+
+        if exif_dict:
+            try:
+                exif_date_time_original = exif_dict["DateTimeOriginal"]
+                # convert from "2013:10:01 09:17:50" to "10-01-2013 [09.17.50]"
+                date_month = str(exif_date_time_original).split(" ")[0].split(":")
+                date_time = str(exif_date_time_original).split(" ")[1].replace(":", ".")
+                return date_month[1] + "-" + date_month[2] + "-" + date_month[0] + " " + "[" + date_time + "]"
+            except KeyError:
+                return None
+
+    @staticmethod
     def _get_modification_time(file):
         return datetime.fromtimestamp(Path(file).stat().st_mtime).replace(microsecond=0).strftime("%m-%d-%Y [%H.%M.%S]")
 
@@ -221,16 +251,11 @@ if __name__ == '__main__':
     # file1 = r"F:\IMPORTANT BACKUP\Pictures\2014-12-01\001.JPG"
     # file3 = r"F:\IMPORTANT BACKUP\Pictures\My Movie.mp4"
     file2 = r"F:\IMPORTANT BACKUP\Pictures"
-    # dir1 = r"F:\IMPORTANT BACKUP\Pictures\00\00000000000\00"
 
 
     def test(x):
         print(x)
-        # with open(r"C:\Users\jlw_4\Desktop\output.txt", "a") as y:
-        #     y.write(str(x) + "\n")
-        pass
 
 
     job = ImageOrganizer(working_directory=r"E:\Pictures", move_file=False, fast_parse=False)
-    # job.parse_file(file3)
     job.parse_dir(file2, callback=test)
