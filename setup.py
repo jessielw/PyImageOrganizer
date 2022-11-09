@@ -17,7 +17,7 @@ with open(os.path.join(os.path.dirname(__file__), "README.md")) as fd:
 
 setup(
     name="PyImageOrganizer",
-    version="1.0",
+    version="1.1",
     description="Sorts images/videos/random files into folders by year, month, date/time",
     long_description=ext_long_desc,
     long_description_content_type="text/markdown",

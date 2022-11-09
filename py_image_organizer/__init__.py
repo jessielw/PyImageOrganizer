@@ -1,1 +1,1 @@
-from image_organizer import ImageOrganizer
+from py_image_organizer.image_organizer import ImageOrganizer
