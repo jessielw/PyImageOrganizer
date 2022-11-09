@@ -1,3 +1,4 @@
 .idea/
 dist/
 PyImageOrganizer.egg-info/
+example_upload_to_pypi.txt
