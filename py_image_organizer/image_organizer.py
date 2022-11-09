@@ -64,7 +64,7 @@ class ImageOrganizer:
     def _make_directories(self):
         """creates sorting directories if not known"""
         root_directory = Path(self.working_dir)
-        Path(root_directory).mkdir(exist_ok=True)
+        Path(root_directory).mkdir(parents=True, exist_ok=True)
 
         Path(root_directory / self.image_dir_name).mkdir(exist_ok=True)
         self.image_dir = Path(root_directory / self.image_dir_name)
