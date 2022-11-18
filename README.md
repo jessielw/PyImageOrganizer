@@ -8,7 +8,7 @@ Developed by Jessie Wilson (2022)
 
 ## Install
 
-`pip install PyImageSorter`
+`pip install PyImageOrganizer`
 
 **If using Linux you must also install MediaInfo**
 
@@ -16,7 +16,7 @@ Developed by Jessie Wilson (2022)
 
 ## Uninstall
 
-`pip uninstall PyImageSorter`
+`pip uninstall PyImageOrganizer`
 
 ## Examples of How To Use
 
