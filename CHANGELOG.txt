@@ -8,3 +8,7 @@ Change Log
 1.1 (11/9/2022)
 -------------------
 - Fix import error
+
+1.2 (11/22/2022)
+-------------------
+- Fix documentation
